@@ -9,13 +9,14 @@
 
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
+var config = require('../../conf/config');
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
-var client_id = 'CLIENT_ID'; // Your client id
-var client_secret = 'CLIENT_SECRET'; // Your secret
-var redirect_uri = 'REDIRECT_URI'; // Your redirect uri
+var client_id = config['CLIENT_ID']; // Your client id
+var client_secret = config['CLIENT_SECRET']; // Your secret
+var redirect_uri = config['REDIRECT_URI']; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -46,7 +47,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email';
+  var scope = 'user-read-recently-played user-top-read user-library-modify user-library-read playlist-read-private playlist-modify-public playlist-modify-private playlist-read-collaborative user-read-email user-read-birthdate user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control streaming user-follow-read user-follow-modify';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -104,13 +105,14 @@ app.get('/callback', function(req, res) {
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
+        res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
+            querystring.stringify({
+              access_token: access_token,
+              refresh_token: refresh_token
+            })
+        );
       } else {
-        res.redirect('/#' +
+        res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
           querystring.stringify({
             error: 'invalid_token'
           }));
@@ -136,9 +138,12 @@ app.get('/refresh_token', function(req, res) {
   request.post(authOptions, function(error, response, body) {
     if (!error && response.statusCode === 200) {
       var access_token = body.access_token;
-      res.send({
-        'access_token': access_token
-      });
+      res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
+          querystring.stringify({
+            access_token: access_token,
+            refresh_token: refresh_token
+          })
+      );
     }
   });
 });

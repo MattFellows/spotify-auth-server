@@ -9,14 +9,14 @@
 
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
-var config = require('../../conf/config');
+var config = require('../../src/conf/config');
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
 var client_id = config['CLIENT_ID']; // Your client id
 var client_secret = config['CLIENT_SECRET']; // Your secret
-var redirect_uri = config['REDIRECT_URI']; // Your redirect uri
+var redirect_uri = config['AUTH_URL'] + '/api/callback'; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -41,7 +41,7 @@ app.use(express.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
 
-app.get('/login', function(req, res) {
+app.get('/api/login', function(req, res) {
 
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
@@ -58,7 +58,7 @@ app.get('/login', function(req, res) {
     }));
 });
 
-app.get('/callback', function(req, res) {
+app.get('/api/callback', function(req, res) {
 
   // your application requests refresh and access tokens
   // after checking the state parameter
@@ -105,14 +105,14 @@ app.get('/callback', function(req, res) {
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
+        res.redirect(config['APP_DOMAIN'] + '/AuthSuccess#' +
             querystring.stringify({
               access_token: access_token,
               refresh_token: refresh_token
             })
         );
       } else {
-        res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
+        res.redirect(config['APP_DOMAIN'] + '/AuthSuccess#' +
           querystring.stringify({
             error: 'invalid_token'
           }));
@@ -121,7 +121,7 @@ app.get('/callback', function(req, res) {
   }
 });
 
-app.get('/refresh_token', function(req, res) {
+app.get('/api/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
   var refresh_token = req.query.refresh_token;
@@ -138,7 +138,7 @@ app.get('/refresh_token', function(req, res) {
   request.post(authOptions, function(error, response, body) {
     if (!error && response.statusCode === 200) {
       var access_token = body.access_token;
-      res.redirect('http://' + config['APP_DOMAIN'] + '/AuthSuccess#' +
+      res.redirect(config['APP_DOMAIN'] + '/AuthSuccess#' +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token

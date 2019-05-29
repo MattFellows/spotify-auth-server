@@ -16,7 +16,7 @@ var cookieParser = require('cookie-parser');
 
 var client_id = config['CLIENT_ID']; // Your client id
 var client_secret = config['CLIENT_SECRET']; // Your secret
-var redirect_uri = config['AUTH_URL'] + '/api/callback'; // Your redirect uri
+var redirect_uri = config['AUTH_DOMAIN'] + '/api/callback'; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
